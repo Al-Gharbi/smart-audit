@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Smart Contract Security Audit Report · SA-20260717-005114</title>
+<style>
+:root{
+  --ink:#0d0f14;--ink-m:#4a5060;--page:#f7f8fa;--srf:#ffffff;--bdr:#e2e5ec;
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --sans:'Inter','Segoe UI',system-ui,sans-serif;
+  --cc:#c0392b;--bgc:#fff0ef;--bdc:#f5bbb8;
+  --ch:#b85c00;--bgh:#fff5eb;--bdh:#f0c89a;
+  --cm:#906d00;--bgm:#fffae8;--bdm:#e8d698;
+  --cl:#1a5fa8;--bgl:#eef4ff;--bdl:#afc8f0;
+  --ci:#3d4760;--bgi:#f1f3f8;--bdi:#c4cadb;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--page);color:var(--ink);line-height:1.65}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+
+ 
+header{background:#0d0f14;color:#fff;padding:52px 0 44px}
+.ci{max-width:960px;margin:0 auto;padding:0 24px;display:flex;align-items:flex-start;gap:32px}
+.ct{flex:1}
+.eye{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#8b92a8;margin-bottom:10px}
+.ctitle{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:16px}
+.cmeta{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#9199b0}
+.rid{font-family:var(--mono);background:#1c2033;color:#7b88b0;padding:3px 8px;border-radius:4px;font-size:11px}
+.obadge{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:110px;border-radius:10px;padding:14px 18px;text-align:center;font-weight:700;flex-shrink:0}
+.ov-critical{background:var(--cc);color:#fff}
+.ov-high{background:var(--ch);color:#fff}
+.ov-medium{background:var(--cm);color:#fff}
+.ov-low{background:var(--cl);color:#fff}
+.obadge .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;opacity:.8;margin-bottom:4px}
+.obadge .val{font-size:18px}
+
+ 
+section{padding:36px 0}
+section+section{border-top:1px solid var(--bdr)}
+.stitle{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-m);margin-bottom:20px}
+
+ 
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+.card{border-radius:8px;border:1px solid var(--bdr);padding:16px 14px 12px;background:var(--srf)}
+.cnum{font-size:32px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:5px}
+.clbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-m)}
+.c-critical .cnum{color:var(--cc)} .c-high .cnum{color:var(--ch)}
+.c-medium .cnum{color:var(--cm)}   .c-low .cnum{color:var(--cl)}
+.c-info .cnum{color:var(--ci)}
+
+ 
+.sbar-track{height:7px;border-radius:4px;background:var(--bdr);overflow:hidden;display:flex}
+.sbar-track span{height:100%}
+.bc{background:var(--cc)} .bh{background:var(--ch)}
+.bm{background:var(--cm)} .bl{background:var(--cl)} .bi{background:#c4cadb}
+.sleg{display:flex;flex-wrap:wrap;gap:10px;margin-top:7px;font-size:11px;color:var(--ink-m)}
+.sleg span{display:flex;align-items:center;gap:4px}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+ 
+.stbl{width:100%;border-collapse:collapse;font-size:13px}
+.stbl th{background:#f1f3f7;text-align:left;padding:9px 14px;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--ink-m);border-bottom:1px solid var(--bdr)}
+.stbl td{padding:11px 14px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+.stbl tr:last-child td{border-bottom:none}
+.stbl tbody tr:hover{background:#f8f9fc}
+.fname{font-family:var(--mono);font-size:12px}
+.sver{font-family:var(--mono);font-size:11px;background:#f1f3f7;padding:2px 6px;border-radius:3px}
+.rpill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:3px 9px;border-radius:20px;white-space:nowrap}
+.risk-critical{background:var(--bgc);color:var(--cc);border:1px solid var(--bdc)}
+.risk-high    {background:var(--bgh);color:var(--ch);border:1px solid var(--bdh)}
+.risk-medium  {background:var(--bgm);color:var(--cm);border:1px solid var(--bdm)}
+.risk-low     {background:var(--bgl);color:var(--cl);border:1px solid var(--bdl)}
+.mbar{width:56px;height:5px;border-radius:3px;background:var(--bdr);overflow:hidden;display:inline-block;vertical-align:middle;margin-left:5px}
+.mbf{height:100%;border-radius:3px;background:currentColor}
+
+ 
+.cb{margin-bottom:32px}
+.ch{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid var(--bdr)}
+.cicon{width:34px;height:34px;border-radius:8px;background:#1c2033;color:#8b92a8;
+  font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cname{font-family:var(--mono);font-size:14px;font-weight:600}
+.cstat{font-size:12px;color:var(--ink-m);margin-top:2px}
+.noiss{padding:16px;border-radius:8px;background:#f0faf4;border:1px solid #b2e0c4;
+  font-size:13px;color:#1a6b3a;display:flex;align-items:center;gap:8px}
+
+details.finding{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:12px;background:var(--srf)}
+details[open] summary{border-bottom:1px solid var(--bdr)}
+summary.fhead{padding:14px 18px;display:flex;align-items:flex-start;gap:12px;
+  cursor:pointer;list-style:none}
+summary.fhead::-webkit-details-marker{display:none}
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+.sev-critical{background:var(--bgc);color:var(--cc);border:1px solid var(--bdc)}
+.sev-high    {background:var(--bgh);color:var(--ch);border:1px solid var(--bdh)}
+.sev-medium  {background:var(--bgm);color:var(--cm);border:1px solid var(--bdm)}
+.sev-low     {background:var(--bgl);color:var(--cl);border:1px solid var(--bdl)}
+.sev-info    {background:var(--bgi);color:var(--ci);border:1px solid var(--bdi)}
+.ftw{flex:1;min-width:0}
+.fid{font-size:11px;font-family:var(--mono);color:var(--ink-m);margin-bottom:3px}
+.ftitle{font-size:14px;font-weight:600}
+.floc{font-size:11px;font-family:var(--mono);color:var(--ink-m);margin-top:3px}
+.chev{font-size:11px;color:var(--ink-m);flex-shrink:0;margin-top:4px;transition:transform .2s}
+details[open] .chev{transform:rotate(180deg)}
+.swctag{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;
+  border-radius:3px;background:#f1f3f7;border:1px solid var(--bdr);color:var(--ink-m);
+  text-decoration:none;margin-left:5px}
+.swctag:hover{background:var(--ink);color:#fff}
+
+.fbody{padding:18px}
+.flbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-m);margin-bottom:6px}
+.fblk{margin-bottom:16px}
+.fblk:last-child{margin-bottom:0}
+.fdesc{font-size:13px;line-height:1.7}
+.codebox{background:#0d1117;border-radius:8px;padding:14px;overflow-x:auto;margin-top:2px}
+.codebox pre{font-family:var(--mono);font-size:12px;line-height:1.7;color:#cdd9e5;margin:0}
+.rec{background:#f4f8ff;border-left:3px solid var(--cl);border-radius:0 8px 8px 0;
+  padding:11px 15px;font-size:13px;line-height:1.6}
+.refs{display:flex;flex-direction:column;gap:5px}
+.refs a{font-size:12px;color:var(--cl);text-decoration:none;font-family:var(--mono)}
+.refs a:hover{text-decoration:underline}
+
+footer{text-align:center;padding:36px 0;font-size:12px;color:var(--ink-m);border-top:1px solid var(--bdr)}
+footer a{color:inherit}
+@media print{details{display:block}summary{display:none}.fbody{display:block!important}
+  header{background:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header>
+  <div class="ci">
+    <div class="ct">
+      <div class="eye">Automated Security Assessment</div>
+      <h1 class="ctitle">Smart Contract Security Audit Report</h1>
+      <div class="cmeta">
+        <span>📅 2026-07-17 00:51:14 UTC</span>
+        <span>⏱ 2ms</span>
+        <span>🔧 smart-audit v1.0.0</span>
+        <span class="rid">SA-20260717-005114</span>
+      </div>
+    </div>
+    <div class="obadge ov-critical">
+      <div class="lbl">Overall Risk</div>
+      <div class="val">CRITICAL</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <div class="stitle">Executive Summary</div>
+  <div class="cards">
+    <div class="card c-critical"><div class="cnum">2</div><div class="clbl">Critical</div></div>
+    <div class="card c-high">   <div class="cnum">5</div>    <div class="clbl">High</div></div>
+    <div class="card c-medium"> <div class="cnum">5</div>  <div class="clbl">Medium</div></div>
+    <div class="card c-low">    <div class="cnum">4</div>     <div class="clbl">Low</div></div>
+    <div class="card c-info">   <div class="cnum">0</div>    <div class="clbl">Info</div></div>
+  </div>
+  
+  <div class="sbar-track">
+    <span class="bc" style="width:12%"></span>
+    <span class="bh" style="width:31%"></span>
+    <span class="bm" style="width:31%"></span>
+    <span class="bl" style="width:25%"></span>
+    <span class="bi" style="width:0%"></span>
+  </div>
+  <div class="sleg">
+    <span><span class="sdot" style="background:var(--cc)"></span>Critical</span>
+    <span><span class="sdot" style="background:var(--ch)"></span>High</span>
+    <span><span class="sdot" style="background:var(--cm)"></span>Medium</span>
+    <span><span class="sdot" style="background:var(--cl)"></span>Low</span>
+    <span><span class="sdot" style="background:#c4cadb"></span>Info</span>
+  </div>
+  
+</section>
+
+<section>
+  <div class="stitle">Scope — 1 Contract(s)</div>
+  <table class="stbl">
+    <thead><tr><th>Contract</th><th>Solidity</th><th>LOC</th><th>Findings</th><th>Risk Score</th></tr></thead>
+    <tbody>
+    
+    <tr>
+      <td><span class="fname">📄 VulnerableVault.sol</span></td>
+      <td><span class="sver">^0.7.6</span></td>
+      <td>60</td>
+      <td>16</td>
+      <td>
+        <span class="rpill risk-critical">
+          8.0/10
+          <span class="mbar"><span class="mbf" style="width:80%"></span></span>
+        </span>
+      </td>
+    </tr>
+    
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="stitle">Findings</div>
+  
+  <div class="cb">
+    <div class="ch">
+      <div class="cicon">📄</div>
+      <div>
+        <div class="cname">VulnerableVault.sol</div>
+        <div class="cstat">60 LOC · Solidity ^0.7.6 · Risk 8.0/10</div>
+      </div>
+    </div>
+    
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-critical">⬟ Critical</span>
+          <div class="ftw">
+            <div class="fid">
+              F-01 · SA-001
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-107" target="_blank" rel="noopener">SWC-107</a>
+              
+            </div>
+            <div class="ftitle">Reentrancy Vulnerability</div>
+            <div class="floc">VulnerableVault.sol:22</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">An external call is made before state variables are updated. An attacker can re-enter the function and drain funds before balances are decremented.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 22</div>
+            <div class="codebox"><pre>(bool success, ) = msg.sender.call{value: amount}(&#34;&#34;);</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Apply the Checks-Effects-Interactions (CEI) pattern: update all state variables BEFORE any external call. Add OpenZeppelin&#39;s ReentrancyGuard modifier as a second layer of defence.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-107" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-107</a><a href="https://docs.openzeppelin.com/contracts/4.x/api/security#ReentrancyGuard" target="_blank" rel="noopener">→ https://docs.openzeppelin.com/contracts/4.x/api/security#ReentrancyGuard</a><a href="https://consensys.github.io/smart-contract-best-practices/attacks/reentrancy/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/attacks/reentrancy/</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-critical">⬟ Critical</span>
+          <div class="ftw">
+            <div class="fid">
+              F-02 · SA-004
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-106" target="_blank" rel="noopener">SWC-106</a>
+              
+            </div>
+            <div class="ftitle">Unprotected selfdestruct</div>
+            <div class="floc">VulnerableVault.sol:35</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">selfdestruct() destroys the contract and forwards all Ether to a target address. Without access control an attacker can call it to steal funds and brick the protocol.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 35</div>
+            <div class="codebox"><pre>selfdestruct(payable(msg.sender));</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Guard every selfdestruct call with a strict access-control modifier (e.g. onlyOwner). Consider whether selfdestruct is needed at all — it is deprecated in EIP-6049.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-106" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-106</a><a href="https://eips.ethereum.org/EIPS/eip-6049" target="_blank" rel="noopener">→ https://eips.ethereum.org/EIPS/eip-6049</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-high">▲ High</span>
+          <div class="ftw">
+            <div class="fid">
+              F-03 · SA-011
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-101" target="_blank" rel="noopener">SWC-101</a>
+              
+            </div>
+            <div class="ftitle">Integer Overflow Risk (Solidity &lt; 0.8.0)</div>
+            <div class="floc">VulnerableVault.sol:2</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">Solidity versions below 0.8.0 do not revert on arithmetic overflow/underflow. Without SafeMath, a uint wraps silently (e.g. 0 - 1 = 2^256 - 1), enabling balance manipulation.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 2</div>
+            <div class="codebox"><pre>pragma solidity ^0.7.6;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Upgrade to Solidity 0.8.0&#43; (overflow protection is built-in). For legacy code use OpenZeppelin SafeMath.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-101" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-101</a><a href="https://docs.openzeppelin.com/contracts/4.x/api/utils#SafeMath" target="_blank" rel="noopener">→ https://docs.openzeppelin.com/contracts/4.x/api/utils#SafeMath</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-high">▲ High</span>
+          <div class="ftw">
+            <div class="fid">
+              F-04 · SA-002
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-115" target="_blank" rel="noopener">SWC-115</a>
+              
+            </div>
+            <div class="ftitle">tx.origin Used for Authentication</div>
+            <div class="floc">VulnerableVault.sol:29</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">tx.origin refers to the original external account that started the transaction. If a malicious contract tricks a user into calling it, tx.origin still passes the check while msg.sender would not.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 29</div>
+            <div class="codebox"><pre>require(tx.origin == owner, &#34;Not owner&#34;);</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Replace all tx.origin authentication checks with msg.sender.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-115" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-115</a><a href="https://docs.soliditylang.org/en/latest/security-considerations.html#tx-origin" target="_blank" rel="noopener">→ https://docs.soliditylang.org/en/latest/security-considerations.html#tx-origin</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-high">▲ High</span>
+          <div class="ftw">
+            <div class="fid">
+              F-05 · SA-008
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-120" target="_blank" rel="noopener">SWC-120</a>
+              
+            </div>
+            <div class="ftitle">Weak Pseudo-Random Number Generation</div>
+            <div class="floc">VulnerableVault.sol:45</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">Block attributes (timestamp, difficulty, blockhash) used as a randomness seed can be predicted or influenced by validators/miners, enabling exploitation of lotteries, NFT drops, or any randomness-dependent logic.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 45</div>
+            <div class="codebox"><pre>return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender)));</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Use Chainlink VRF v2 for verifiable on-chain randomness. Never use block variables as a PRNG seed.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-120" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-120</a><a href="https://docs.chain.link/vrf/v2/introduction" target="_blank" rel="noopener">→ https://docs.chain.link/vrf/v2/introduction</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-high">▲ High</span>
+          <div class="ftw">
+            <div class="fid">
+              F-06 · SA-017
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-121" target="_blank" rel="noopener">SWC-121</a>
+              
+            </div>
+            <div class="ftitle">Potential Signature Replay Attack</div>
+            <div class="floc">VulnerableVault.sol:50</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">ecrecover() is used for signature verification. Without a nonce and/or chain ID bound to the signed message, a valid signature can be reused across multiple calls or replayed on other EVM-compatible networks.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 50</div>
+            <div class="codebox"><pre>address signer = ecrecover(hash, v, r, s);</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Use EIP-712 typed structured data hashing with domain separator (chainId, verifyingContract) and a per-user nonce. OpenZeppelin&#39;s EIP712 and ECDSA libraries handle this correctly.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-121" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-121</a><a href="https://eips.ethereum.org/EIPS/eip-712" target="_blank" rel="noopener">→ https://eips.ethereum.org/EIPS/eip-712</a><a href="https://docs.openzeppelin.com/contracts/4.x/api/utils#ECDSA" target="_blank" rel="noopener">→ https://docs.openzeppelin.com/contracts/4.x/api/utils#ECDSA</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-high">▲ High</span>
+          <div class="ftw">
+            <div class="fid">
+              F-07 · SA-006
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-112" target="_blank" rel="noopener">SWC-112</a>
+              
+            </div>
+            <div class="ftitle">Delegatecall to Potentially Untrusted Contract</div>
+            <div class="floc">VulnerableVault.sol:65</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">delegatecall executes external code in the context of the calling contract, sharing its storage. If the target is user-controlled or upgradeable without care, an attacker can overwrite critical storage slots.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 65</div>
+            <div class="codebox"><pre>impl.delegatecall(data);</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Never pass a user-supplied address to delegatecall. If using a proxy pattern, use OpenZeppelin&#39;s TransparentUpgradeableProxy or UUPS and follow EIP-1967 storage slots.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-112" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-112</a><a href="https://eips.ethereum.org/EIPS/eip-1967" target="_blank" rel="noopener">→ https://eips.ethereum.org/EIPS/eip-1967</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-medium">◆ Medium</span>
+          <div class="ftw">
+            <div class="fid">
+              F-08 · SA-005
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">SWC-116</a>
+              
+            </div>
+            <div class="ftitle">Block Timestamp Dependence</div>
+            <div class="floc">VulnerableVault.sol:16</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">block.timestamp can be manipulated by validators/miners within a ~15 second window. Using it as a source of randomness or for precise time logic is unsafe.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 16</div>
+            <div class="codebox"><pre>unlockTime = block.timestamp &#43; 7 days;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Avoid block.timestamp for randomness. For time-locks a ±15s tolerance is usually acceptable; document the assumption explicitly.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-116</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-medium">◆ Medium</span>
+          <div class="ftw">
+            <div class="fid">
+              F-09 · SA-007
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-104" target="_blank" rel="noopener">SWC-104</a>
+              
+            </div>
+            <div class="ftitle">Unchecked Low-Level Call Return Value</div>
+            <div class="floc">VulnerableVault.sol:22</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">Low-level .call() returns (bool success, bytes memory data). If the return value is not checked, a failed call silently continues execution and the contract operates on an incorrect assumption of success.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 22</div>
+            <div class="codebox"><pre>(bool success, ) = msg.sender.call{value: amount}(&#34;&#34;);</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Always check the boolean return: `(bool ok,) = addr.call{value: v}(&#39;&#39;); require(ok, &#39;call failed&#39;);`</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-104" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-104</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-medium">◆ Medium</span>
+          <div class="ftw">
+            <div class="fid">
+              F-10 · SA-005
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">SWC-116</a>
+              
+            </div>
+            <div class="ftitle">Block Timestamp Dependence</div>
+            <div class="floc">VulnerableVault.sol:40</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">block.timestamp can be manipulated by validators/miners within a ~15 second window. Using it as a source of randomness or for precise time logic is unsafe.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 40</div>
+            <div class="codebox"><pre>return block.timestamp &gt;= unlockTime;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Avoid block.timestamp for randomness. For time-locks a ±15s tolerance is usually acceptable; document the assumption explicitly.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-116</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-medium">◆ Medium</span>
+          <div class="ftw">
+            <div class="fid">
+              F-11 · SA-005
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">SWC-116</a>
+              
+            </div>
+            <div class="ftitle">Block Timestamp Dependence</div>
+            <div class="floc">VulnerableVault.sol:45</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">block.timestamp can be manipulated by validators/miners within a ~15 second window. Using it as a source of randomness or for precise time logic is unsafe.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 45</div>
+            <div class="codebox"><pre>return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender)));</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Avoid block.timestamp for randomness. For time-locks a ±15s tolerance is usually acceptable; document the assumption explicitly.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-116</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-medium">◆ Medium</span>
+          <div class="ftw">
+            <div class="fid">
+              F-12 · SA-018
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-128" target="_blank" rel="noopener">SWC-128</a>
+              
+            </div>
+            <div class="ftitle">Denial of Service via Unbounded Loop</div>
+            <div class="floc">VulnerableVault.sol:58</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">A loop iterates over .length of a dynamic array that can grow without bound. With enough elements the transaction will exceed the block gas limit, permanently bricking the function.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 58</div>
+            <div class="codebox"><pre>for (uint256 i = 0; i &lt; users.length; i&#43;&#43;) {</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Use a pull-over-push pattern (recipients claim their own funds) or paginate iteration with an explicit limit parameter.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-128" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-128</a><a href="https://consensys.github.io/smart-contract-best-practices/attacks/denial-of-service/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/attacks/denial-of-service/</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-low">● Low</span>
+          <div class="ftw">
+            <div class="fid">
+              F-13 · SA-003
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-103" target="_blank" rel="noopener">SWC-103</a>
+              
+            </div>
+            <div class="ftitle">Floating Pragma</div>
+            <div class="floc">VulnerableVault.sol:2</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">Using a caret (^) or range pragma allows the contract to be compiled with any compatible compiler version, including future ones that may introduce breaking changes or new vulnerabilities.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 2</div>
+            <div class="codebox"><pre>pragma solidity ^0.7.6;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Pin the pragma to an exact version: `pragma solidity 0.8.24;`</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-103" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-103</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-low">● Low</span>
+          <div class="ftw">
+            <div class="fid">
+              F-14 · SA-013
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-134" target="_blank" rel="noopener">SWC-134</a>
+              
+            </div>
+            <div class="ftitle">Hard-coded Ethereum Address</div>
+            <div class="floc">VulnerableVault.sol:11</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">A raw 20-byte hex address is hard-coded. If this address is ever compromised, the contract cannot be updated without a full redeployment.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 11</div>
+            <div class="codebox"><pre>address public owner = 0xdAC17F958D2ee523a2206206994597C13D831ec7;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Replace hard-coded addresses with constructor arguments or owner-settable state variables with appropriate access control.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-134" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-134</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-low">● Low</span>
+          <div class="ftw">
+            <div class="fid">
+              F-15 · SA-016
+              
+            </div>
+            <div class="ftitle">Missing Event for Critical State Change</div>
+            <div class="floc">VulnerableVault.sol:11</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">A critical access-control address (owner, admin, governance) is updated without emitting an event. Off-chain monitors, multisig dashboards, and auditors rely on events to detect privilege changes.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 11</div>
+            <div class="codebox"><pre>address public owner = 0xdAC17F958D2ee523a2206206994597C13D831ec7;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Emit a dedicated event whenever owner, admin, or governance addresses are changed: `emit OwnershipTransferred(oldOwner, newOwner);`</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-low">● Low</span>
+          <div class="ftw">
+            <div class="fid">
+              F-16 · SA-016
+              
+            </div>
+            <div class="ftitle">Missing Event for Critical State Change</div>
+            <div class="floc">VulnerableVault.sol:15</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">A critical access-control address (owner, admin, governance) is updated without emitting an event. Off-chain monitors, multisig dashboards, and auditors rely on events to detect privilege changes.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 15</div>
+            <div class="codebox"><pre>owner = msg.sender;</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Emit a dedicated event whenever owner, admin, or governance addresses are changed: `emit OwnershipTransferred(oldOwner, newOwner);`</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+    
+  </div>
+  
+</section>
+</div>
+
+<footer>
+  <p>Generated by <a href="https://github.com/Al-Gharbi/smart-audit">smart-audit</a> — Automated static analysis for Solidity.</p>
+  <p style="margin-top:5px;font-size:11px">⚠ Automated analysis complements but does not replace manual audit. Review all findings before mainnet deployment.</p>
+</footer>
+</body>
+</html>
