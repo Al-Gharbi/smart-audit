@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/logo.png" alt="smart-audit logo" width="120"/>
+<img src="docs/Logo.png" alt="smart-audit logo" width="120"/>
 
 # smart-audit
 
@@ -106,7 +106,7 @@ make install
 ### Docker
 
 ```bash
-docker pull algharbisec/smart-audit:latest
+docker pull algharbi/smart-audit:latest
 
 docker run --rm -v $(pwd):/data algharbisec/smart-audit \
   scan /data/ -r -f html -o /data/audit-report.html
