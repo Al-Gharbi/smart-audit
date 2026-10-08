@@ -54,7 +54,7 @@ func (m *MarkdownReporter) Generate(report *analyzer.AuditReport, outputPath str
 			fmt.Fprintf(&b, "**Description**\n\n%s\n\n", f.Description)
 
 			if f.CodeSnippet != "" {
-				fmt.Fprintf(&b, "**Code**\n\n```solidity\n%s\n```\n\n", f.CodeSnippet)
+				fmt.Fprintf(&b, "**Code**\n\n```solidity\n%s\n```\n\n", strings.ReplaceAll(f.CodeSnippet, "```", "'''"))
 			}
 
 			fmt.Fprintf(&b, "**Recommendation**\n\n%s\n\n", f.Recommendation)

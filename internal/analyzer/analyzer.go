@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+// Version is the tool version. It is a var so release builds can inject it with
+// -ldflags "-X github.com/Al-Gharbi/smart-audit/internal/analyzer.Version=1.2.3".
+var Version = "1.1.0"
+
 // Config controls analyzer behaviour.
 type Config struct {
 	UseSlither  bool
@@ -41,7 +45,7 @@ func (a *Analyzer) Analyze(files []string) (*AuditReport, error) {
 	report := &AuditReport{
 		ReportID:  fmt.Sprintf("SA-%s", now.Format("20060102-150405")),
 		Title:     "Smart Contract Security Audit Report",
-		Version:   "1.0.0",
+		Version:   Version,
 		Timestamp: now.Format("2006-01-02 15:04:05 UTC"),
 	}
 
@@ -81,6 +85,8 @@ func (a *Analyzer) analyzeFile(path string, minRank int) (*ContractReport, error
 	src := string(raw)
 	clean := stripComments(src)
 	lines := strings.Split(src, "\n")
+	masked := maskStrings(clean)
+	ctx := &fileCtx{Masked: masked, Funcs: parseFuncs(masked), StateVars: parseStateVars(masked)}
 
 	cr := &ContractReport{
 		FileName:        filepath.Base(path),
@@ -93,7 +99,12 @@ func (a *Analyzer) analyzeFile(path string, minRank int) (*ContractReport, error
 		if severityRank[strings.ToLower(p.Severity)] < minRank {
 			continue
 		}
-		matches := findAllLineMatches(clean, src, p.Regex)
+		var matches []lineMatch
+		if p.Detect != nil {
+			matches = offsetsToMatches(clean, src, p.Detect(ctx))
+		} else {
+			matches = findAllLineMatches(clean, src, p.Regex, p.Exclude)
+		}
 		for _, m := range matches {
 			cr.Findings = append(cr.Findings, Finding{
 				ID:             p.ID,
@@ -153,16 +164,50 @@ type lineMatch struct {
 // findAllLineMatches finds every regex match in the comment-stripped source,
 // then maps the match offset back to a 1-based line number and pulls the
 // original (commented) source line as the snippet for readability.
-func findAllLineMatches(clean, original string, re *regexp.Regexp) []lineMatch {
-	var out []lineMatch
+func findAllLineMatches(clean, original string, re *regexp.Regexp, exclude *regexp.Regexp) []lineMatch {
 	locs := re.FindAllStringIndex(clean, -1)
-	if locs == nil {
-		return out
+	if exclude != nil {
+		kept := locs[:0]
+		for _, loc := range locs {
+			if !exclude.MatchString(lineAt(clean, loc[0])) {
+				kept = append(kept, loc)
+			}
+		}
+		locs = kept
 	}
-	origLines := strings.Split(original, "\n")
-
+	offsets := make([]int, 0, len(locs))
 	for _, loc := range locs {
-		lineNo := strings.Count(clean[:loc[0]], "\n") + 1
+		offsets = append(offsets, loc[0])
+	}
+	return offsetsToMatches(clean, original, offsets)
+}
+
+// lineAt returns the full line of s that contains offset.
+func lineAt(s string, offset int) string {
+	start := strings.LastIndexByte(s[:offset], '\n') + 1
+	end := strings.IndexByte(s[offset:], '\n')
+	if end < 0 {
+		return s[start:]
+	}
+	return s[start : offset+end]
+}
+
+// offsetsToMatches maps byte offsets in the comment-stripped source to 1-based
+// line numbers and snippets taken from the original (commented) source.
+// Duplicate lines are reported once per rule.
+func offsetsToMatches(clean, original string, offsets []int) []lineMatch {
+	var out []lineMatch
+	origLines := strings.Split(original, "\n")
+	seen := map[int]bool{}
+	for _, off := range offsets {
+		if off < 0 || off > len(clean) {
+			continue
+		}
+		lineNo := strings.Count(clean[:off], "\n") + 1
+		if seen[lineNo] {
+			continue
+		}
+		seen[lineNo] = true
 		snippet := ""
 		if lineNo-1 < len(origLines) {
 			snippet = strings.TrimSpace(origLines[lineNo-1])

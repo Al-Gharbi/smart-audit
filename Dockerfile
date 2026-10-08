@@ -22,5 +22,5 @@ ENTRYPOINT ["/smart-audit"]
 CMD ["--help"]
 
 # Usage:
-#   docker run --rm -v $(pwd)/contracts:/data al-gharbi/smart-audit \
+#   docker run --rm -v $(pwd)/contracts:/data ghcr.io/al-gharbi/smart-audit \
 #       scan /data/ -r -f html -o /data/audit-report.html

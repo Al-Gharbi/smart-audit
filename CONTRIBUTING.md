@@ -93,10 +93,23 @@ git push origin feat/sa-019-centralization-risk
 - Prefer specific patterns over broad ones to minimize false positives
 - Test against the contracts in `testdata/`
 
+## Adding a Rule
+
+Most rules are a regular expression in `internal/analyzer/patterns.go`. Use a
+regex (optionally with `Exclude`) when a single line is enough to decide.
+
+If a rule needs structure — "a state write *after* an external call in the same
+function", "no access modifier on the function containing `selfdestruct`" —
+set `Detect` instead. A `Detector` (`internal/analyzer/detectors.go`) receives
+the parsed file (`fileCtx`: masked source, function bodies, state variables)
+and returns offsets. Every new rule needs at least one positive and one
+negative case in `internal/analyzer/detectors_test.go`, and a false-positive
+regression test if it fixes one.
+
 ## Code Style
 
 ```bash
-go fmt ./...
+gofmt -l .   # must print nothing
 go vet ./...
 ```
 
