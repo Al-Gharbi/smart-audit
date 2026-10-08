@@ -13,32 +13,47 @@ type HTMLReporter struct{}
 
 func (h *HTMLReporter) Generate(report *analyzer.AuditReport, outputPath string) error {
 	funcMap := template.FuncMap{
-		"lower":   strings.ToLower,
+		"lower": strings.ToLower,
 		"sevClass": func(sev string) string {
 			switch strings.ToUpper(sev) {
-			case "CRITICAL": return "sev-critical"
-			case "HIGH":     return "sev-high"
-			case "MEDIUM":   return "sev-medium"
-			case "LOW":      return "sev-low"
-			default:         return "sev-info"
+			case "CRITICAL":
+				return "sev-critical"
+			case "HIGH":
+				return "sev-high"
+			case "MEDIUM":
+				return "sev-medium"
+			case "LOW":
+				return "sev-low"
+			default:
+				return "sev-info"
 			}
 		},
 		"sevIcon": func(sev string) string {
 			switch strings.ToUpper(sev) {
-			case "CRITICAL": return "⬟"
-			case "HIGH":     return "▲"
-			case "MEDIUM":   return "◆"
-			case "LOW":      return "●"
-			default:         return "○"
+			case "CRITICAL":
+				return "⬟"
+			case "HIGH":
+				return "▲"
+			case "MEDIUM":
+				return "◆"
+			case "LOW":
+				return "●"
+			default:
+				return "○"
 			}
 		},
 		"sevLabel": func(sev string) string {
 			switch strings.ToUpper(sev) {
-			case "CRITICAL": return "Critical"
-			case "HIGH":     return "High"
-			case "MEDIUM":   return "Medium"
-			case "LOW":      return "Low"
-			default:         return "Info"
+			case "CRITICAL":
+				return "Critical"
+			case "HIGH":
+				return "High"
+			case "MEDIUM":
+				return "Medium"
+			case "LOW":
+				return "Low"
+			default:
+				return "Info"
 			}
 		},
 		"hasSwc": func(s string) bool {
@@ -47,24 +62,34 @@ func (h *HTMLReporter) Generate(report *analyzer.AuditReport, outputPath string)
 		"riskBar": func(score float64) int { return int(score * 10) },
 		"riskClass": func(score float64) string {
 			switch {
-			case score >= 7: return "risk-critical"
-			case score >= 4: return "risk-high"
-			case score >= 2: return "risk-medium"
-			default:         return "risk-low"
+			case score >= 7:
+				return "risk-critical"
+			case score >= 4:
+				return "risk-high"
+			case score >= 2:
+				return "risk-medium"
+			default:
+				return "risk-low"
 			}
 		},
 		"ovClass": func(r string) string {
 			switch r {
-			case "CRITICAL": return "ov-critical"
-			case "HIGH":     return "ov-high"
-			case "MEDIUM":   return "ov-medium"
-			default:         return "ov-low"
+			case "CRITICAL":
+				return "ov-critical"
+			case "HIGH":
+				return "ov-high"
+			case "MEDIUM":
+				return "ov-medium"
+			default:
+				return "ov-low"
 			}
 		},
 		"add":        func(a, b int) int { return a + b },
 		"findingNum": func(i int) string { return fmt.Sprintf("F-%02d", i+1) },
 		"pct": func(n, total int) int {
-			if total == 0 { return 0 }
+			if total == 0 {
+				return 0
+			}
 			return (n * 100) / total
 		},
 	}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Smart Contract Security Audit Report · SA-20260717-005114</title>
+<title>Smart Contract Security Audit Report · SA-20261007-183533</title>
 <style>
 :root{
   --ink:#0d0f14;--ink-m:#4a5060;--page:#f7f8fa;--srf:#ffffff;--bdr:#e2e5ec;
@@ -138,10 +138,10 @@ footer a{color:inherit}
       <div class="eye">Automated Security Assessment</div>
       <h1 class="ctitle">Smart Contract Security Audit Report</h1>
       <div class="cmeta">
-        <span>📅 2026-07-17 00:51:14 UTC</span>
-        <span>⏱ 2ms</span>
-        <span>🔧 smart-audit v1.0.0</span>
-        <span class="rid">SA-20260717-005114</span>
+        <span>📅 2026-10-07 18:35:33 UTC</span>
+        <span>⏱ 1ms</span>
+        <span>🔧 smart-audit v1.1.0</span>
+        <span class="rid">SA-20261007-183533</span>
       </div>
     </div>
     <div class="obadge ov-critical">
@@ -159,15 +159,15 @@ footer a{color:inherit}
     <div class="card c-critical"><div class="cnum">2</div><div class="clbl">Critical</div></div>
     <div class="card c-high">   <div class="cnum">5</div>    <div class="clbl">High</div></div>
     <div class="card c-medium"> <div class="cnum">5</div>  <div class="clbl">Medium</div></div>
-    <div class="card c-low">    <div class="cnum">4</div>     <div class="clbl">Low</div></div>
+    <div class="card c-low">    <div class="cnum">2</div>     <div class="clbl">Low</div></div>
     <div class="card c-info">   <div class="cnum">0</div>    <div class="clbl">Info</div></div>
   </div>
   
   <div class="sbar-track">
-    <span class="bc" style="width:12%"></span>
-    <span class="bh" style="width:31%"></span>
-    <span class="bm" style="width:31%"></span>
-    <span class="bl" style="width:25%"></span>
+    <span class="bc" style="width:14%"></span>
+    <span class="bh" style="width:35%"></span>
+    <span class="bm" style="width:35%"></span>
+    <span class="bl" style="width:14%"></span>
     <span class="bi" style="width:0%"></span>
   </div>
   <div class="sleg">
@@ -190,11 +190,11 @@ footer a{color:inherit}
       <td><span class="fname">📄 VulnerableVault.sol</span></td>
       <td><span class="sver">^0.7.6</span></td>
       <td>60</td>
-      <td>16</td>
+      <td>14</td>
       <td>
         <span class="rpill risk-critical">
-          8.0/10
-          <span class="mbar"><span class="mbf" style="width:80%"></span></span>
+          8.2/10
+          <span class="mbar"><span class="mbf" style="width:82%"></span></span>
         </span>
       </td>
     </tr>
@@ -211,7 +211,7 @@ footer a{color:inherit}
       <div class="cicon">📄</div>
       <div>
         <div class="cname">VulnerableVault.sol</div>
-        <div class="cstat">60 LOC · Solidity ^0.7.6 · Risk 8.0/10</div>
+        <div class="cstat">60 LOC · Solidity ^0.7.6 · Risk 8.2/10</div>
       </div>
     </div>
     
@@ -234,7 +234,7 @@ footer a{color:inherit}
         <div class="fbody">
           <div class="fblk">
             <div class="flbl">Description</div>
-            <div class="fdesc">An external call is made before state variables are updated. An attacker can re-enter the function and drain funds before balances are decremented.</div>
+            <div class="fdesc">A low-level external call is made and, later in the same function, contract state is written. An attacker can re-enter the function from the callee and act on stale state (classic checks-effects-interactions violation) before the write happens.</div>
           </div>
           
           <div class="fblk">
@@ -273,7 +273,7 @@ footer a{color:inherit}
         <div class="fbody">
           <div class="fblk">
             <div class="flbl">Description</div>
-            <div class="fdesc">selfdestruct() destroys the contract and forwards all Ether to a target address. Without access control an attacker can call it to steal funds and brick the protocol.</div>
+            <div class="fdesc">selfdestruct() destroys the contract and forwards all Ether to a target address. This function contains selfdestruct but no recognisable access control (no owner/role modifier and no msg.sender check), so any caller may be able to trigger it.</div>
           </div>
           
           <div class="fblk">
@@ -533,46 +533,7 @@ footer a{color:inherit}
           <span class="sbadge sev-medium">◆ Medium</span>
           <div class="ftw">
             <div class="fid">
-              F-09 · SA-007
-              
-              <a class="swctag" href="https://swcregistry.io/docs/SWC-104" target="_blank" rel="noopener">SWC-104</a>
-              
-            </div>
-            <div class="ftitle">Unchecked Low-Level Call Return Value</div>
-            <div class="floc">VulnerableVault.sol:22</div>
-          </div>
-          <span class="chev">▾</span>
-        </summary>
-        <div class="fbody">
-          <div class="fblk">
-            <div class="flbl">Description</div>
-            <div class="fdesc">Low-level .call() returns (bool success, bytes memory data). If the return value is not checked, a failed call silently continues execution and the contract operates on an incorrect assumption of success.</div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">Vulnerable Code — line 22</div>
-            <div class="codebox"><pre>(bool success, ) = msg.sender.call{value: amount}(&#34;&#34;);</pre></div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">Recommendation</div>
-            <div class="rec">Always check the boolean return: `(bool ok,) = addr.call{value: v}(&#39;&#39;); require(ok, &#39;call failed&#39;);`</div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">References</div>
-            <div class="refs"><a href="https://swcregistry.io/docs/SWC-104" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-104</a></div>
-          </div>
-          
-        </div>
-      </details>
-      
-      <details class="finding">
-        <summary class="fhead">
-          <span class="sbadge sev-medium">◆ Medium</span>
-          <div class="ftw">
-            <div class="fid">
-              F-10 · SA-005
+              F-09 · SA-005
               
               <a class="swctag" href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">SWC-116</a>
               
@@ -611,7 +572,7 @@ footer a{color:inherit}
           <span class="sbadge sev-medium">◆ Medium</span>
           <div class="ftw">
             <div class="fid">
-              F-11 · SA-005
+              F-10 · SA-005
               
               <a class="swctag" href="https://swcregistry.io/docs/SWC-116" target="_blank" rel="noopener">SWC-116</a>
               
@@ -650,7 +611,7 @@ footer a{color:inherit}
           <span class="sbadge sev-medium">◆ Medium</span>
           <div class="ftw">
             <div class="fid">
-              F-12 · SA-018
+              F-11 · SA-018
               
               <a class="swctag" href="https://swcregistry.io/docs/SWC-128" target="_blank" rel="noopener">SWC-128</a>
               
@@ -679,6 +640,45 @@ footer a{color:inherit}
           <div class="fblk">
             <div class="flbl">References</div>
             <div class="refs"><a href="https://swcregistry.io/docs/SWC-128" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-128</a><a href="https://consensys.github.io/smart-contract-best-practices/attacks/denial-of-service/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/attacks/denial-of-service/</a></div>
+          </div>
+          
+        </div>
+      </details>
+      
+      <details class="finding">
+        <summary class="fhead">
+          <span class="sbadge sev-medium">◆ Medium</span>
+          <div class="ftw">
+            <div class="fid">
+              F-12 · SA-007
+              
+              <a class="swctag" href="https://swcregistry.io/docs/SWC-104" target="_blank" rel="noopener">SWC-104</a>
+              
+            </div>
+            <div class="ftitle">Unchecked Low-Level Call Return Value</div>
+            <div class="floc">VulnerableVault.sol:65</div>
+          </div>
+          <span class="chev">▾</span>
+        </summary>
+        <div class="fbody">
+          <div class="fblk">
+            <div class="flbl">Description</div>
+            <div class="fdesc">A low-level call/send returns a success flag. Here the flag is discarded or stored but never used in a require/assert/if/return, so a failed call silently continues and the contract proceeds as if it had succeeded.</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Vulnerable Code — line 65</div>
+            <div class="codebox"><pre>impl.delegatecall(data);</pre></div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">Recommendation</div>
+            <div class="rec">Always check the boolean return: `(bool ok,) = addr.call{value: v}(&#39;&#39;); require(ok, &#39;call failed&#39;);`</div>
+          </div>
+          
+          <div class="fblk">
+            <div class="flbl">References</div>
+            <div class="refs"><a href="https://swcregistry.io/docs/SWC-104" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-104</a></div>
           </div>
           
         </div>
@@ -757,80 +757,6 @@ footer a{color:inherit}
           <div class="fblk">
             <div class="flbl">References</div>
             <div class="refs"><a href="https://swcregistry.io/docs/SWC-134" target="_blank" rel="noopener">→ https://swcregistry.io/docs/SWC-134</a></div>
-          </div>
-          
-        </div>
-      </details>
-      
-      <details class="finding">
-        <summary class="fhead">
-          <span class="sbadge sev-low">● Low</span>
-          <div class="ftw">
-            <div class="fid">
-              F-15 · SA-016
-              
-            </div>
-            <div class="ftitle">Missing Event for Critical State Change</div>
-            <div class="floc">VulnerableVault.sol:11</div>
-          </div>
-          <span class="chev">▾</span>
-        </summary>
-        <div class="fbody">
-          <div class="fblk">
-            <div class="flbl">Description</div>
-            <div class="fdesc">A critical access-control address (owner, admin, governance) is updated without emitting an event. Off-chain monitors, multisig dashboards, and auditors rely on events to detect privilege changes.</div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">Vulnerable Code — line 11</div>
-            <div class="codebox"><pre>address public owner = 0xdAC17F958D2ee523a2206206994597C13D831ec7;</pre></div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">Recommendation</div>
-            <div class="rec">Emit a dedicated event whenever owner, admin, or governance addresses are changed: `emit OwnershipTransferred(oldOwner, newOwner);`</div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">References</div>
-            <div class="refs"><a href="https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/</a></div>
-          </div>
-          
-        </div>
-      </details>
-      
-      <details class="finding">
-        <summary class="fhead">
-          <span class="sbadge sev-low">● Low</span>
-          <div class="ftw">
-            <div class="fid">
-              F-16 · SA-016
-              
-            </div>
-            <div class="ftitle">Missing Event for Critical State Change</div>
-            <div class="floc">VulnerableVault.sol:15</div>
-          </div>
-          <span class="chev">▾</span>
-        </summary>
-        <div class="fbody">
-          <div class="fblk">
-            <div class="flbl">Description</div>
-            <div class="fdesc">A critical access-control address (owner, admin, governance) is updated without emitting an event. Off-chain monitors, multisig dashboards, and auditors rely on events to detect privilege changes.</div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">Vulnerable Code — line 15</div>
-            <div class="codebox"><pre>owner = msg.sender;</pre></div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">Recommendation</div>
-            <div class="rec">Emit a dedicated event whenever owner, admin, or governance addresses are changed: `emit OwnershipTransferred(oldOwner, newOwner);`</div>
-          </div>
-          
-          <div class="fblk">
-            <div class="flbl">References</div>
-            <div class="refs"><a href="https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/" target="_blank" rel="noopener">→ https://consensys.github.io/smart-contract-best-practices/development-recommendations/solidity-specific/event-monitoring/</a></div>
           </div>
           
         </div>

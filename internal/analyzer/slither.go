@@ -41,21 +41,25 @@ func runSlither(path string) []Finding {
 		}
 		sev := "MEDIUM"
 		switch d.Impact {
-		case "High":   sev = "HIGH"
-		case "Medium": sev = "MEDIUM"
-		case "Low":    sev = "LOW"
-		case "Informational": sev = "INFO"
+		case "High":
+			sev = "HIGH"
+		case "Medium":
+			sev = "MEDIUM"
+		case "Low":
+			sev = "LOW"
+		case "Informational":
+			sev = "INFO"
 		}
 		findings = append(findings, Finding{
-			ID:          "SL-" + d.Check,
-			Title:       "[Slither] " + d.Check,
-			Description: d.Description,
-			Severity:    sev,
-			SWC:         "slither:" + d.Check,
-			File:        path,
-			Line:        line,
+			ID:             "SL-" + d.Check,
+			Title:          "[Slither] " + d.Check,
+			Description:    d.Description,
+			Severity:       sev,
+			SWC:            "slither:" + d.Check,
+			File:           path,
+			Line:           line,
 			Recommendation: "See https://github.com/crytic/slither/wiki/Detector-Documentation#" + d.Check,
-			References:  []string{"https://github.com/crytic/slither"},
+			References:     []string{"https://github.com/crytic/slither"},
 		})
 	}
 	return findings
