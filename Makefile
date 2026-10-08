@@ -1,8 +1,8 @@
 BINARY     := smart-audit
-VERSION    := 1.0.0
+VERSION    := 1.1.0
 BUILD_DIR  := dist
 GO         := go
-LDFLAGS    := -ldflags "-s -w -X github.com/Al-Gharbi/smart-audit/cmd.Version=$(VERSION)"
+LDFLAGS    := -ldflags "-s -w -X github.com/Al-Gharbi/smart-audit/internal/analyzer.Version=$(VERSION)"
 
 .PHONY: all build test lint clean install release docker help
 
@@ -46,7 +46,7 @@ release:
 
 ## docker: build Docker image
 docker:
-	docker build -t al-gharbi/smart-audit:$(VERSION) -t al-gharbi/smart-audit:latest .
+	docker build -t ghcr.io/al-gharbi/smart-audit:$(VERSION) -t ghcr.io/al-gharbi/smart-audit:latest .
 	@echo "✓ Docker image built"
 
 ## help: show this help

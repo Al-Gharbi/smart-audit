@@ -12,15 +12,15 @@ import (
 	"github.com/Al-Gharbi/smart-audit/internal/reporter"
 )
 
-func executeScan(targets []string, f scanFlags) error {
+func executeScan(targets []string, f scanFlags) (int, error) {
 	printBanner()
 
 	files, err := collectSolFiles(targets, f.recursive)
 	if err != nil {
-		return err
+		return exitError, err
 	}
 	if len(files) == 0 {
-		return fmt.Errorf("no .sol files found in the given paths")
+		return exitError, fmt.Errorf("no .sol files found in the given paths")
 	}
 	fmt.Printf("%s %d Solidity contract(s) discovered\n\n", clr.Cyan("→"), len(files))
 
@@ -32,7 +32,7 @@ func executeScan(targets []string, f scanFlags) error {
 	})
 	report, err := a.Analyze(files)
 	if err != nil {
-		return fmt.Errorf("analysis: %w", err)
+		return exitError, fmt.Errorf("analysis: %w", err)
 	}
 	report.Duration = time.Since(start).Round(time.Millisecond).String()
 
@@ -45,13 +45,33 @@ func executeScan(targets []string, f scanFlags) error {
 	}
 	r, err := reporter.New(ext)
 	if err != nil {
-		return err
+		return exitError, err
 	}
 	if err := r.Generate(report, out); err != nil {
-		return fmt.Errorf("generating report: %w", err)
+		return exitError, fmt.Errorf("generating report: %w", err)
 	}
 	fmt.Printf("\n%s Report saved → %s\n", clr.Green("✓"), out)
-	return nil
+
+	if f.failOn != "" && hasFindingAtOrAbove(report, f.failOn) {
+		fmt.Printf("%s findings at or above %q severity (--fail-on)\n", clr.Red("✗"), f.failOn)
+		return exitFindings, nil
+	}
+	return exitOK, nil
+}
+
+var severityRank = map[string]int{"info": 1, "low": 2, "medium": 3, "high": 4, "critical": 5}
+
+// hasFindingAtOrAbove reports whether any finding has severity >= threshold.
+func hasFindingAtOrAbove(report *analyzer.AuditReport, threshold string) bool {
+	min := severityRank[strings.ToLower(threshold)]
+	for _, c := range report.Contracts {
+		for _, fi := range c.Findings {
+			if severityRank[strings.ToLower(fi.Severity)] >= min {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func collectSolFiles(paths []string, rec bool) ([]string, error) {
@@ -101,9 +121,9 @@ func printTerminalSummary(report *analyzer.AuditReport) {
 		clr.Bold("AUDIT SUMMARY"), s.TotalFindings, s.TotalContracts)
 	fmt.Println(sep)
 	fmt.Printf("  %-22s %s\n", clr.Red("CRITICAL"), clr.Red("%d", s.Critical))
-	fmt.Printf("  %-22s %s\n", clr.HiRed("HIGH"),     clr.HiRed("%d", s.High))
-	fmt.Printf("  %-22s %s\n", clr.Yellow("MEDIUM"),   clr.Yellow("%d", s.Medium))
-	fmt.Printf("  %-22s %s\n", clr.HiBlue("LOW"),      clr.HiBlue("%d", s.Low))
+	fmt.Printf("  %-22s %s\n", clr.HiRed("HIGH"), clr.HiRed("%d", s.High))
+	fmt.Printf("  %-22s %s\n", clr.Yellow("MEDIUM"), clr.Yellow("%d", s.Medium))
+	fmt.Printf("  %-22s %s\n", clr.HiBlue("LOW"), clr.HiBlue("%d", s.Low))
 	fmt.Printf("  %-14s %d\n", "INFO", s.Info)
 	fmt.Println(sep)
 	for _, c := range report.Contracts {
@@ -121,18 +141,26 @@ func printTerminalSummary(report *analyzer.AuditReport) {
 
 func sevFmt(sev string) string {
 	switch strings.ToUpper(sev) {
-	case "CRITICAL": return clr.Red("CRITICAL")
-	case "HIGH":     return clr.HiRed("HIGH    ")
-	case "MEDIUM":   return clr.Yellow("MEDIUM  ")
-	case "LOW":      return clr.HiBlue("LOW     ")
-	default:         return "INFO    "
+	case "CRITICAL":
+		return clr.Red("CRITICAL")
+	case "HIGH":
+		return clr.HiRed("HIGH    ")
+	case "MEDIUM":
+		return clr.Yellow("MEDIUM  ")
+	case "LOW":
+		return clr.HiBlue("LOW     ")
+	default:
+		return "INFO    "
 	}
 }
 
 func normalizeExt(f string) string {
 	switch strings.ToLower(f) {
-	case "json":          return "json"
-	case "md","markdown": return "md"
-	default:              return "html"
+	case "json":
+		return "json"
+	case "md", "markdown":
+		return "md"
+	default:
+		return "html"
 	}
 }
